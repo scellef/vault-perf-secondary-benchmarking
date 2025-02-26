@@ -15,7 +15,7 @@ with each replica activating itself as an individual secondary cluster.
 2. Deploy, initialize, and unseal the Transit Unseal cluster:
     * `helm install unseal hashicorp/vault -f unseal-raft-local-values.yml`
     * `kubectl exec -it unseal-vault-0 -- vault operator init -format=json -key-shares=1 -key-threshold=1 > ./init.unseal.json`
-    * `kubectl exec -it unseal-vault-0 -- vault operator unseal $(jq -r .unseal_keys_hex[] < ./init.unseal.json)
+    * `kubectl exec -it unseal-vault-0 -- vault operator unseal $(jq -r .unseal_keys_hex[] < ./init.unseal.json)`
 3. Enable Transit secrets engine and create Primary cluster unseal key:
     * `kubectl exec -it unseal-vault-0 -- vault login $(jq -r .root_token < ./init.unseal.json)`
     * `kubectl exec -it unseal-vault-0 -- vault token create -id=root`
