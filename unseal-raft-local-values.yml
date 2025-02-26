@@ -1,0 +1,68 @@
+global:
+  enabled: true
+  tlsDisable: true
+
+injector:
+  enabled: false
+
+server:
+  # ignore anti-affinity for now
+  enabled: true
+  extraLabels:
+    'repl/pr': 'null'
+    'repl/dr': 'null'
+    'vault': 'unseal'
+  affinity: ''
+  image:
+    repository: hashicorp/vault-enterprise
+    tag: latest
+  enterpriseLicense:
+    secretName: vault-license
+    secretKey: vault.hclic
+      #securityContext:
+      #  pod:
+      #    runAsNonRoot: false
+      #    runAsUser: 1
+      #    runAsGroup: 1
+  ha:
+    enabled: true
+    replicas: 1
+    raft:
+      enabled: true
+      config: |
+        ui = true
+
+        service_registration "kubernetes" {}
+        log_level = "trace"
+        log_requests_level = "trace"
+        raw_storage_endpoint = "true"
+
+        listener "tcp" {
+          address = ":8200"
+          cluster_address = ":8201"
+          tls_disable = 1
+          telemetry {
+            unauthenticated_metrics_access = true
+          }
+        }
+
+        telemetry {
+          prometheus_retention_time = "24h"
+          disable_hostname = true
+        }
+
+        storage "raft" {
+          path = "/vault/data"
+          retry_join {
+            auto_join_scheme = "http"
+            auto_join = "provider=k8s instance=vault vault=unseal"
+          }
+        }
+        api_addr = "http://unseal-vault.default.svc.cluster.local:8200"
+
+        replication {
+          allow_forwarding_via_token = "new_token"
+        }
+        
+csi:
+  enabled: false

@@ -1,0 +1,36 @@
+global:
+  enabled: true
+  tlsDisable: true
+
+injector:
+  enabled: false
+
+server:
+  # ignore anti-affinity for now
+  enabled: true
+  extraLabels: 
+    'repl/pr': 'secondary'
+    'repl/dr': 'null'
+    'vault': 'secondary'
+  extraArgs: '-log-level=trace -dev -dev-root-token-id=root -dev-ha -dev-transactional'
+  affinity: ''
+  image:
+    repository: hashicorp/vault-enterprise
+    tag: latest
+  dev:
+    enabled: true
+    devRootToken: "root"
+  postStart:
+    - /bin/sh
+    - /home/vault/bin/initialize-replication.sh
+  enterpriseLicense:
+    secretName: vault-license
+    secretKey: vault.hclic
+  volumes: 
+    - name: initialize-replication
+      configMap:
+        name: initialize-replication
+  volumeMounts:
+    - name: initialize-replication
+      mountPath: "/home/vault/bin"
+

@@ -1,0 +1,63 @@
+global:
+  enabled: true
+  tlsDisable: true
+
+injector:
+  enabled: false
+
+server:
+  # ignore anti-affinity for now
+  enabled: true
+  extraLabels: 
+    'repl/pr': 'primary'
+    'repl/dr': 'null'
+    'vault': 'primary'
+  affinity: ''
+  image:
+    repository: hashicorp/vault-enterprise
+    tag: latest
+  enterpriseLicense:
+    secretName: vault-license
+    secretKey: vault.hclic
+  ha:
+    enabled: true
+    replicas: 1
+    raft:
+      enabled: true
+      config: |
+        ui = true
+
+        service_registration "kubernetes" {}
+        log_level = "trace"
+        log_requests_level = "trace"
+        raw_storage_endpoint = "true"
+
+        listener "tcp" {
+          address = ":8200"
+          cluster_address = ":8201"
+          tls_disable = 1
+          telemetry {
+            unauthenticated_metrics_access = true
+          }
+        }
+
+        telemetry {
+          prometheus_retention_time = "24h"
+          disable_hostname = true
+        }
+
+         storage "raft" {
+           path = "/vault/data"
+         }
+        api_addr = "http://primary-vault.default.svc.cluster.local:8200"
+
+        replication {
+          allow_forwarding_via_token = "new_token"
+        }
+        
+        seal "transit" {
+          address = "http://unseal-vault.default.svc.cluster.local:8200"
+          key_name = "primary-vault"
+          mount_path = "transit"
+          token = "root"
+        }

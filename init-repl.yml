@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: vault
+    app.kubernetes.io/name: vault
+  name: initialize-replication
+  namespace: default
+data:
+  initialize-replication.sh: |-
+    primaryAddr='http://primary-vault.default.svc.cluster.local:8200'
+    secondaryAddr='http://localhost:8200'
+
+    export VAULT_FORMAT='json'
+    export VAULT_TOKEN='root'
+
+    export VAULT_ADDR=$primaryAddr
+    secToken=$(vault write -field=wrapping_token sys/replication/performance/primary/secondary-token id=$(hostname) | tr -d '"')
+
+    export VAULT_ADDR=$secondaryAddr
+    vault write sys/replication/performance/secondary/enable token=$secToken
