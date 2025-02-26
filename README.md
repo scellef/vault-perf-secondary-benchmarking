@@ -27,4 +27,4 @@ with each replica activating itself as an individual secondary cluster.
 6. Deploy the Secondary cluster:
     * `helm install secondary hashicorp/vault -f secondary-raft-local-values.yml`
 7. Scale the Secondary cluster to your desired number of secondaries:
-    * `kubectl scale sts secondary-vault --replicas=50
+    * `kubectl scale sts secondary-vault --replicas=50`
